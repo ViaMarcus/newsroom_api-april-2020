@@ -16,6 +16,7 @@ RSpec.describe 'Api::Articles :index', type: :request do
     end
     
     it 'has a 200 response' do
+      binding.pry
       expect(response).to have_http_status 200
     end
 
@@ -62,6 +63,16 @@ RSpec.describe 'Api::Articles :index', type: :request do
 
       it ':international' do
         expect(response_json['articles'][0]).to have_key 'international'
+      end
+    end
+
+    describe 'response does not have keys' do
+      it ':updated_at' do
+        expect(response_json['articles'][0]).not_to have_key 'updated_at'
+      end
+
+      it 'created_at' do
+        expect(response_json['articles'][0]).not_to have_key 'created_at'
       end
     end
   end

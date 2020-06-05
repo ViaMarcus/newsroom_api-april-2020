@@ -39,11 +39,7 @@ class Api::ArticlesController < ApplicationController
                  .limit(21)
                  .offset(offset)
     end
-
-    next_page = articles.length > 20 ? page + 1 : nil
-    render json: { articles: articles[0...20], each_serializer: Article::IndexSerializer, page: page, next_page: next_page }
-  rescue StandardError => e
-    puts e
+    render json: Article::IndexSerializer.new({ :articles => articles, :page => page }).to_h
   end
 
   def show
@@ -68,6 +64,15 @@ class Api::ArticlesController < ApplicationController
   end
 
   private
+
+  def find_articles(first_params, or_params)
+    Article
+      .where(location: location, published: true, *first_params )
+      .or(Article.where(international: true, published: true,*or_params))
+      .order('published_at DESC')
+      .limit(21)
+      .offset(offset)
+  end
 
   def attach_image(article)
     params_image = params[:image]

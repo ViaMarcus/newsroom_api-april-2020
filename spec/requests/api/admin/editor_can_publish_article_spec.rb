@@ -1,5 +1,5 @@
 RSpec.describe 'Api::Admin::Articles :update', type: :request do
-  let!(:article) { create(:article) }
+  let!(:article) { create(:article, published: false) }
   let(:editor) { create(:user, role: 'editor') }
   let(:editors_credentials) { editor.create_new_auth_token }
   let(:editors_headers) { { HTTP_ACCEPT: 'application/json' }.merge!(editors_credentials) }

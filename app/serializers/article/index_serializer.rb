@@ -1,20 +1,19 @@
 # frozen_string_literal: true
 
 class Article::IndexSerializer < ActiveModel::Serializer
-  include Rails.application.routes.url_helpers
-  attributes :id, :title, :category, :published_at, :image, :location, :international
+  attributes :page, :next_page, :articles
 
-  def published_at
-    object.published_at.strftime('%F %R')
+  def page
+    object[:page]
   end
 
-  def image
-    return nil unless object.image.attached?
+  def next_page
+    object[:articles].length > 20 ? object[:page] + 1 : nil
+  end
 
-    if Rails.env.test?
-      rails_blob_url(object.image)
-    else
-      object.image.service_url(expires_in: 1.hour, disposition: 'inline')
+  def articles
+    object[:articles][0...20].map do |article|
+      Article::IndexEachSerializer.new(article).to_h
     end
   end
 end
