@@ -4,40 +4,18 @@ class Api::ArticlesController < ApplicationController
   before_action :authenticate_user!, only: [:create]
 
   def index
-    page = params[:page] || 1
     category = params[:category] || 'all'
-    location = params[:location]
-    offset = (page.to_i - 1) * 20
-
+    page = params[:page] || 1
     case category
     when 'local'
-      articles = Article
-                 .where(location: location, published: true)
-                 .order('published_at DESC')
-                 .limit(21)
-                 .offset(offset)
+      articles = find_articles({}, { id: -1 })
     when 'current'
       last_24hrs = Time.now - 1.day..Time.now
-      articles = Article
-                 .where(location: location, published_at: last_24hrs, published: true)
-                 .or(Article.where(international: true, published_at: last_24hrs, published: true))
-                 .order('published_at DESC')
-                 .limit(21)
-                 .offset(offset)
+      articles = find_articles({ published_at: last_24hrs },{ published_at: last_24hrs })
     when 'all'
-      articles = Article
-                 .where(location: location, published: true)
-                 .or(Article.where(international: true, published: true))
-                 .order('published_at DESC')
-                 .limit(21)
-                 .offset(offset)
+      articles = find_articles({},{})
     else
-      articles = Article
-                 .where(category: category, location: location, published: true)
-                 .or(Article.where(category: category, international: true, published: true))
-                 .order('published_at DESC')
-                 .limit(21)
-                 .offset(offset)
+      articles = find_articles({ category: category }, { category: category })
     end
     render json: Article::IndexSerializer.new({ :articles => articles, :page => page }).to_h
   end
@@ -66,9 +44,11 @@ class Api::ArticlesController < ApplicationController
   private
 
   def find_articles(first_params, or_params)
+    page = params[:page] || 1
+    offset = (page.to_i - 1) * 20
     Article
-      .where(location: location, published: true, *first_params )
-      .or(Article.where(international: true, published: true,*or_params))
+      .where(location: params[:location], published: true, **first_params)
+      .or(Article.where(international: true, published: true, **or_params))
       .order('published_at DESC')
       .limit(21)
       .offset(offset)
